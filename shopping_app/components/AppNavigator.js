@@ -6,7 +6,7 @@ import HomeScreen from '../screens/HomeScreen';
 import CartScreen from '../screens/CartScreen';
 import AccountScreen from '../screens/AccountScreen';
 import FavoritesScreen from '../screens/FavoriteScreen';
-
+import MyOrderScreen from '../screens/MyOrderScreen';
 const Tab = createBottomTabNavigator();
 
 const AppNavigator = () => {
@@ -23,7 +23,7 @@ const AppNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="CartScreen"
+        name="Sepet"
         component={CartScreen}
         options={{
           tabBarLabel: 'Sepet',
@@ -33,12 +33,22 @@ const AppNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Account"
+        name="Hesabım"
         component={AccountScreen}
         options={{
           tabBarLabel: 'Hesap',
           tabBarIcon: ({ color, size }) => (
             <AntDesign name="user" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Siparişlerim"
+        component={MyOrderScreen}
+        options={{
+          tabBarLabel: 'Siparişlerim',
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome name="reorder" size={size} color={color} />
           ),
         }}
       />

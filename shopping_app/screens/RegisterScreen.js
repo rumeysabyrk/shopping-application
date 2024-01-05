@@ -58,10 +58,9 @@ export default function RegisterScreen({ navigation }) {
     }
 
     return <View style={styles.view}>
-        <Text style={{ fontSize: 34, fontWeight: "800", marginBottom: 20 }}>Sign Up</Text>
+        <Text style={{ fontSize: 34, fontWeight: "800", marginBottom: 20 }}>Kayıt Ol</Text>
         <TextBox placeholder="Full Name" onChangeText={text => handleChange(text, "name")} />
         <TextBox placeholder="Email Address" onChangeText={text => handleChange(text, "email")} />
-        <TextBox placeholder="Who are you? (Student or Teacher)" onChangeText={text => handleChange(text, "role")}/>
         <TextBox placeholder="Password" secureTextEntry={true}  onChangeText={text => handleChange(text, "pwd")}/>
         <TextBox placeholder="Confirme Password" secureTextEntry={true}  onChangeText={text => handleChange(text, "pwd2")}/>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "92%", }}>
