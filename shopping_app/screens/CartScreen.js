@@ -1,52 +1,89 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, Button } from 'react-native';
+import { View, Text, Image, TouchableOpacity, FlatList, Button, Alert } from 'react-native';
 import { firebase } from '../firebase';
+import { useUser } from '../UserContext';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const CartScreen = () => {
-  const [books, setBooks] = useState([]);
+  const { uid } = useUser();
   const [cart, setCart] = useState([]);
+  const [totalPrice, setTotalPrice] = useState(0);
 
   useEffect(() => {
-    const fetchBooks = async () => {
+    const fetchCartItems = async () => {
       try {
+        const cartRef = firebase.firestore().collection('cart');
         const booksRef = firebase.firestore().collection('books');
-        const snapshot = await booksRef.limit(3).get();
 
-        const booksData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          quantity: 1,
+        const cartSnapshot = await cartRef.where('uid', '==', uid).get();
+
+        const cartData = await Promise.all(cartSnapshot.docs.map(async (doc) => {
+          const bookId = doc.data().bookId;
+          const bookSnapshot = await booksRef.doc(bookId).get();
+          const bookData = bookSnapshot.data();
+
+          return {
+            id: doc.id,
+            bookId,
+            quantity: doc.data().quantity,
+            ...bookData,
+          };
         }));
 
-        setBooks(booksData);
+        setCart(cartData);
+        calculateTotalPrice(cartData);
       } catch (error) {
-        console.error('Error fetching books:', error);
+        console.error('Error fetching cart items:', error);
       }
     };
 
-    fetchBooks();
-  }, []);
+    fetchCartItems();
+  });
 
-  const incrementQuantity = (bookId) => {
-    setCart((prevCart) => {
-      const updatedCart = prevCart.map((cartItem) =>
-        cartItem.id === bookId ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem
-      );
-      return updatedCart;
-    });
+  const removeFromCart = async (itemId) => {
+    try {
+      const cartRef = firebase.firestore().collection('cart');
+      await cartRef.doc(itemId).delete();
+
+      setCart((prevCart) => prevCart.filter(item => item.id !== itemId));
+    } catch (error) {
+      console.error('Error removing book from cart:', error);
+    }
   };
 
-  const decrementQuantity = (bookId) => {
-    setCart((prevCart) => {
-      const updatedCart = prevCart.map((cartItem) =>
-        cartItem.id === bookId && cartItem.quantity > 1 ? { ...cartItem, quantity: cartItem.quantity - 1 } : cartItem
-      );
-      return updatedCart;
-    });
+  const calculateTotalPrice = (cartData) => {
+    if (!cart || cart.length === 0) {
+      return 0;
+    }
+    let total = 0;
+    for (const cartItem of cartData) {
+      total += cartItem.price * cartItem.quantity;
+    }
+    setTotalPrice(total);
   };
 
-  const calculateTotalPrice = () => {
-    return cart.reduce((total, cartItem) => total + cartItem.price * cartItem.quantity, 0);
+  const handleOrder = async () => {
+    try {
+      const ordersRef = firebase.firestore().collection('orders');
+      const orderItems = cart.map(cartItem => ({ bookId: cartItem.bookId, quantity: cartItem.quantity }));
+
+      await ordersRef.add({
+        uid,
+        items: orderItems,
+        total: totalPrice,
+        status: 'Siparişiniz hazırlanıyor',
+      });
+
+      const cartRef = firebase.firestore().collection('cart');
+      await Promise.all(cart.map(cartItem => cartRef.doc(cartItem.id).delete()));
+
+      setCart([]);
+      setTotalPrice(0);
+
+      Alert.alert('Başarılı', 'Siparişiniz alındı. Teşekkür ederiz!');
+    } catch (error) {
+      console.error('Error placing order:', error);
+    }
   };
 
   const renderItem = ({ item }) => (
@@ -57,32 +94,27 @@ const CartScreen = () => {
           <Text>{item.bookName}</Text>
           <Text>Yazar: {item.author}</Text>
           <Text>Fiyat: {item.price} TL</Text>
+          <Text>Adet: {item.quantity}</Text>
         </View>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <TouchableOpacity onPress={() => decrementQuantity(item.id)}>
-          <Text style={{ fontSize: 20, marginRight: 8 }}>-</Text>
-        </TouchableOpacity>
-        <Text>{item.quantity}</Text>
-        <TouchableOpacity onPress={() => incrementQuantity(item.id)}>
-          <Text style={{ fontSize: 20, marginLeft: 8 }}>+</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity onPress={() => removeFromCart(item.id)}>
+        <Icon name="trash" size={20} color="red" />
+      </TouchableOpacity>
     </View>
   );
 
   return (
     <View style={{ flex: 1, padding: 16 }}>
       <FlatList
-        data={books}
+        data={cart}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         showsVerticalScrollIndicator={false}
       />
       <View style={{ marginTop: 16 }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Toplam Tutar: 550 TL</Text>
+        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Toplam Tutar: {totalPrice} TL</Text>
       </View>
-      <Button title="Ödeme Yap" onPress={() => alert('Ödeme işlemi yapılacak')} />
+      <Button title="Ödeme Yap" onPress={handleOrder} />
     </View>
   );
 };

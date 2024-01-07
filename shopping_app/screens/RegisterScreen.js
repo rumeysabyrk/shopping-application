@@ -1,9 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState ,useEffect} from 'react'
 import { Text, View, StyleSheet } from "react-native"
 import TextBox from "../components/TextBox"
 import Btn from "../components/Btn"
 import {firebase} from '../firebase';
-
 const styles = StyleSheet.create({
     view: {
         flex: 1,
@@ -17,10 +16,8 @@ export default function RegisterScreen({ navigation }) {
 
     const auth = firebase.auth;
     const firestore = firebase.firestore;
-
     const [values, setValues] = useState({
         name: "",
-        role: "",
         email: "",
         pwd: "",
         pwd2: ""
@@ -45,7 +42,7 @@ export default function RegisterScreen({ navigation }) {
                     firestore().collection("users").doc(auth().currentUser.uid).set({
                         uid: auth().currentUser.uid,
                         name,
-                        role,
+                        role:"user",
                         email
                     })
                 })

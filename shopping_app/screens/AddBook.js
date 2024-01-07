@@ -1,11 +1,8 @@
-import { View, Text, StyleSheet, TextInput, Image, FlatList, TouchableOpacity, Keyboard, ScrollView } from 'react-native'
-import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput,TouchableOpacity, Keyboard } from 'react-native'
+import React, { useState } from 'react';
 import { firebase } from "../firebase";
 
-import BookItem from '../components/BookItem';
-import { useNavigation } from '@react-navigation/native';
 const ProductOperationScreen = () => {
-  const [books, setBooks] = useState([]);
   const [bookName, setBookName] = useState('');
   const [author, setAuthor] = useState('');
   const [genre, setGenre] = useState('');
@@ -14,44 +11,6 @@ const ProductOperationScreen = () => {
   const [date, setDate] = useState('');
   const [image, setImage] = useState('');
   const ref = firebase.firestore().collection("books");
-  const navigation = useNavigation();
-  useEffect(() => {
-    ref.onSnapshot(
-      querySnapshot => {
-        const books = [];
-        querySnapshot.forEach(doc => {
-          const { bookName, author, genre, stock, price, date, image } = doc.data();
-          books.push({
-            id: doc.id,
-            bookName,
-            author,
-            genre,
-            stock,
-            price,
-            date,
-            image,
-          });
-        });
-        setBooks(books);
-      }
-    );
-  }, []);
-  const editBook = (book) => {
-    // Book verilerini UpdateBookScreen'e göndermek için navigation.navigate kullanılır
-    navigation.navigate("EditBookScreen");
-  };
-  const deleteBook = (bookId) => {
-    // Silme işlemini gerçekleştir
-    ref
-      .doc(bookId)
-      .delete()
-      .then(() => {
-        console.log('Kitap başarıyla silindi!');
-      })
-      .catch(error => {
-        console.error('Kitap silinirken bir hata oluştu: ', error);
-      });
-    };
   const addBook = async () => {
     const data = {
       bookName: bookName,
@@ -73,22 +32,16 @@ const ProductOperationScreen = () => {
         setDate("");
         setImage("");
         Keyboard.dismiss();
+      }).then(()=>{
+        alert("Kitap başarıyla eklendi")
       })
       .catch((error) => {
         alert(error);
       })
   };
 
-  const renderItem = ({ item }) => (
-    <BookItem
-      book={item}
-      onDelete={() => deleteBook(item.id)}
-      //onEdit={() => navigation.navigate("EditBookScreen")}
-    />
-  );
-
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
+    <View style={styles.container}>
       <TextInput
         style={styles.input}
         placeholder='Kitap Adı'
@@ -152,15 +105,7 @@ const ProductOperationScreen = () => {
       <TouchableOpacity style={styles.button} onPress={addBook}>
         <Text style={styles.buttonText}>Ekle</Text>
       </TouchableOpacity>
-
-      <FlatList
-        data={books}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        style={styles.flatlist}
-        nestedScrollEnabled={true}
-      />
-    </ScrollView>
+      </View>
   );
 }
 
@@ -192,40 +137,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "white",
     fontSize: 20,
-  },
-  flatlist: {
-    width: '100%',
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    alignItems: 'center',
-    backgroundColor: '#E9E8E8',
-    padding: 8,
-    borderRadius: 5,
-  },
-  image: {
-    width: 50,
-    height: 90,
-    marginRight: 8,
-  },
-  textContainer: {
-    flex: 1,
-  },
-  title: {
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  iconContainer: {
-    flexDirection: 'column', // Yatay yerine dikey
-    justifyContent: 'center', 
-  },
-  flatIcon:{
-    marginBottom:15,
-  },
-  scrollContainer: {
-    padding: 16,
-    alignItems: 'center',
   },
 });
 

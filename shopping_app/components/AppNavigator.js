@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
 
@@ -44,7 +44,7 @@ const AppNavigator = () => {
       />
       <Tab.Screen
         name="Siparişlerim"
-        component={MyOrderScreen}
+        component={ MyOrderScreen}
         options={{
           tabBarLabel: 'Siparişlerim',
           tabBarIcon: ({ color, size }) => (

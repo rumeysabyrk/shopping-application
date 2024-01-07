@@ -3,7 +3,7 @@ import { Text, View, StyleSheet } from "react-native"
 import TextBox from "../components/TextBox"
 import Btn from "../components/Btn"
 import {firebase} from '../firebase'
-import Register from './RegisterScreen'
+import { useUser } from '../UserContext';
 
 const styles = StyleSheet.create({
     view: {
@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
 })
 
 export default function Loginscreen({ navigation }) {
-
+    const { uid, setUserId } = useUser();
     const [values, setValues] = useState({
         email: "",
         pwd: ""
@@ -30,16 +30,19 @@ export default function Loginscreen({ navigation }) {
         })
     }
 
-    loginUser = async () => {
+    const loginUser = async () => {
         const { email, pwd } = values
-        firebase.auth().signInWithEmailAndPassword(email, pwd)
-            .then(() => {
-                
-            })
-            .catch((error) => {
-                alert(error.message)
-                // ..
-            });
+        try {
+            const userCredential = await firebase.auth().signInWithEmailAndPassword(email, pwd);
+      
+      const uid = userCredential.user.uid;
+
+      setUserId(uid);
+      console.log(uid);
+            
+          } catch (error) {
+            alert(error.message);
+          }
     }
 
     return <View style={styles.view}>
